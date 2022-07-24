@@ -1,0 +1,11 @@
+[package]
+name = "hello-chroma"
+version = "0.1.0"
+edition = "c++20"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "hello-chroma"
+path = "src/main.cpp"
+
+[dependencies]
