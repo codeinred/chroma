@@ -64,6 +64,7 @@ fn main() -> Result<(), std::io::Error> {
         append_defs(&mut args, &definitions);
         args.push("-o".into());
         args.push("build/".to_string() + app.name.as_str());
+        args.push(format!("-std={}", config.package.edition));
         args.push(app.path.clone());
         if !Command::new("g++").args(args).spawn()?.wait()?.success() {
             eprintln!("Error when compiling {}", app.name);
