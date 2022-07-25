@@ -36,10 +36,17 @@ fn get_definitions(cfg: &Config) -> Vec<(String, String)> {
 
     let tag = |x| name.clone() + x;
 
-    return vec![
-        (tag(""), "1".into()),
+    let version = &cfg.package.version;
+    let mut definitions = vec![
+        (name.clone(), "1".into()),
         (tag("_VERSION"), quote(&cfg.package.version)),
     ];
+
+    let arr = ["_MAJOR", "_MINOR", "_PATCH"];
+    for (i, item) in version.split('.').take(3).enumerate() {
+        definitions.push((tag(arr[i]), item.into()))
+    }
+    definitions
 }
 
 fn append_defs(args: &mut Vec<String>, defs: &Vec<(String, String)>) {
