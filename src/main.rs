@@ -4,6 +4,8 @@ use std::process::Command;
 use std::string::String;
 use toml;
 
+use chroma::utils::str::{to_macro_name, quote};
+
 #[derive(Deserialize, Debug)]
 struct Package {
     name: String,
@@ -23,16 +25,9 @@ struct Config {
     bin: Vec<Bin>,
 }
 
-fn normalize(s: &str) -> String {
-    let s = s.to_string().to_ascii_uppercase();
-    return s.replace("-", "_");
-}
-fn quote(s: impl AsRef<str>) -> String {
-    let s = s.as_ref();
-    return "\"".to_string() + s + "\"";
-}
+
 fn get_definitions(cfg: &Config) -> Vec<(String, String)> {
-    let name = normalize(cfg.package.name.as_str());
+    let name = to_macro_name(cfg.package.name.as_str());
 
     let tag = |x| name.clone() + x;
 
