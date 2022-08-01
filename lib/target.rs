@@ -17,6 +17,10 @@ pub type SrcBuf = Vec<PathBuf>;
 pub type Include = PathBuf;
 /// Group of compiler options
 pub type Opts = Vec<Opt>;
+/// Compiler definition (like `-DMY_MACRO=13`). The name is stored in the first
+/// element of the tuple, the definition is stored in the second element. If the
+/// second string is empty, this should just be passed as `-DMY_MACRO`.
+pub type Def = (String, String);
 /// Static library (.a file)
 pub type StaticLib = PathBuf;
 /// Shared library (.so file)
@@ -45,6 +49,7 @@ pub struct Exe {
 pub enum Node {
     Include(Include),
     Opts(Opts),
+    Def(Def),
     StaticLib(StaticLib),
     SharedLib(SharedLib),
     Group(Group),
