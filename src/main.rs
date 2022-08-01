@@ -4,7 +4,7 @@ use std::process::Command;
 use std::string::String;
 use toml;
 
-use chroma::utils::str::{to_macro_name, quote};
+use chroma::utils::str::{quote, to_macro_name};
 
 #[derive(Deserialize, Debug)]
 struct Package {
@@ -24,7 +24,6 @@ struct Config {
     package: Package,
     bin: Vec<Bin>,
 }
-
 
 fn get_definitions(cfg: &Config) -> Vec<(String, String)> {
     let name = to_macro_name(cfg.package.name.as_str());
@@ -50,7 +49,9 @@ fn append_defs(args: &mut Vec<String>, defs: &Vec<(String, String)>) {
     }
 }
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> chroma::Result<()> {
+    chroma::utils::fs::find_project_root()?.cd_to_root()?;
+
     let contents = fs::read_to_string("chroma.toml")?;
 
     let config: Config = toml::from_str(&contents)?;
