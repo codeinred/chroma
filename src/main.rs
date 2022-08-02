@@ -4,6 +4,7 @@ use std::process::Command;
 use std::string::String;
 use toml;
 
+/// A versioned package (refer to example in `/examples/hello-chroma`)
 #[derive(Deserialize, Debug)]
 struct Package {
     name: String,
@@ -11,26 +12,33 @@ struct Package {
     edition: String,
 }
 
+/// Binary file type (i.e., an executable target)
 #[derive(Deserialize, Debug)]
 struct Bin {
     name: String,
     path: String,
 }
 
+/// Type representing a configuration file with information about a package
 #[derive(Deserialize, Debug)]
 struct Config {
     package: Package,
     bin: Vec<Bin>,
 }
 
+/// Convert a name to a canonical form to avoid compatibility issues
 fn normalize(s: &str) -> String {
     let s = s.to_string().to_ascii_uppercase();
     return s.replace("-", "_");
 }
+
+/// Wrap a String in quotes
 fn quote(s: impl AsRef<str>) -> String {
     let s = s.as_ref();
     return "\"".to_string() + s + "\"";
 }
+
+/// Get macro definitions from config file
 fn get_definitions(cfg: &Config) -> Vec<(String, String)> {
     let name = normalize(cfg.package.name.as_str());
 
@@ -49,6 +57,8 @@ fn get_definitions(cfg: &Config) -> Vec<(String, String)> {
     definitions
 }
 
+/// Incorporate a list of definitions (see `get_definitions`) into the arguments used to build the
+/// target file(s)
 fn append_defs(args: &mut Vec<String>, defs: &Vec<(String, String)>) {
     for (name, body) in defs {
         args.push(format!("-D{name}={body}"))
