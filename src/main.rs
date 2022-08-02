@@ -4,6 +4,8 @@ use std::process::Command;
 use std::string::String;
 use toml;
 
+use chroma::utils::str::{quote, to_macro_name};
+
 /// A versioned package (refer to example in `/examples/hello-chroma`)
 #[derive(Deserialize, Debug)]
 struct Package {
@@ -26,21 +28,9 @@ struct Config {
     bin: Vec<Bin>,
 }
 
-/// Convert a name to a canonical form to avoid compatibility issues
-fn normalize(s: &str) -> String {
-    let s = s.to_string().to_ascii_uppercase();
-    return s.replace("-", "_");
-}
-
-/// Wrap a String in quotes
-fn quote(s: impl AsRef<str>) -> String {
-    let s = s.as_ref();
-    return "\"".to_string() + s + "\"";
-}
-
 /// Get macro definitions from config file
 fn get_definitions(cfg: &Config) -> Vec<(String, String)> {
-    let name = normalize(cfg.package.name.as_str());
+    let name = to_macro_name(cfg.package.name.as_str());
 
     let tag = |x| name.clone() + x;
 
@@ -65,7 +55,9 @@ fn append_defs(args: &mut Vec<String>, defs: &Vec<(String, String)>) {
     }
 }
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> chroma::Result<()> {
+    chroma::utils::fs::find_project_root()?.cd_to_root()?;
+
     // Load config from toml file (modeled after Cargo config files; see
     // `/examples/hello-chroma/chroma.toml` for an example)
     let contents = fs::read_to_string("chroma.toml")?;
