@@ -4,6 +4,7 @@ use std::process::Command;
 use std::string::String;
 use toml;
 
+/// A versioned package (refer to example in `/examples/hello-chroma`)
 #[derive(Deserialize, Debug)]
 struct Package {
     name: String,
@@ -11,26 +12,33 @@ struct Package {
     edition: String,
 }
 
+/// Binary file type (i.e., an executable target)
 #[derive(Deserialize, Debug)]
 struct Bin {
     name: String,
     path: String,
 }
 
+/// Type representing a configuration file with information about a package
 #[derive(Deserialize, Debug)]
 struct Config {
     package: Package,
     bin: Vec<Bin>,
 }
 
+/// Convert a name to a canonical form to avoid compatibility issues
 fn normalize(s: &str) -> String {
     let s = s.to_string().to_ascii_uppercase();
     return s.replace("-", "_");
 }
+
+/// Wrap a String in quotes
 fn quote(s: impl AsRef<str>) -> String {
     let s = s.as_ref();
     return "\"".to_string() + s + "\"";
 }
+
+/// Get macro definitions from config file
 fn get_definitions(cfg: &Config) -> Vec<(String, String)> {
     let name = normalize(cfg.package.name.as_str());
 
@@ -49,6 +57,8 @@ fn get_definitions(cfg: &Config) -> Vec<(String, String)> {
     definitions
 }
 
+/// Incorporate a list of definitions (see `get_definitions`) into the arguments used to build the
+/// target file(s)
 fn append_defs(args: &mut Vec<String>, defs: &Vec<(String, String)>) {
     for (name, body) in defs {
         args.push(format!("-D{name}={body}"))
@@ -56,6 +66,8 @@ fn append_defs(args: &mut Vec<String>, defs: &Vec<(String, String)>) {
 }
 
 fn main() -> Result<(), std::io::Error> {
+    // Load config from toml file (modeled after Cargo config files; see
+    // `/examples/hello-chroma/chroma.toml` for an example)
     let contents = fs::read_to_string("chroma.toml")?;
 
     let config: Config = toml::from_str(&contents)?;
@@ -65,14 +77,17 @@ fn main() -> Result<(), std::io::Error> {
 
     println!("{:#?}", config);
 
+    // Create directory to store build target(s)
     std::fs::create_dir_all("build").expect("Couldn't create build/ directory");
     for app in &config.bin {
         let mut args = vec![];
         append_defs(&mut args, &definitions);
         args.push("-o".into());
         args.push("build/".to_string() + app.name.as_str());
+        // Include relevant standard library for language standard designated in config.toml
         args.push(format!("-std={}", config.package.edition));
         args.push(app.path.clone());
+        // Execute the actual compilation command and catch any errors generated
         if !Command::new("g++").args(args).spawn()?.wait()?.success() {
             eprintln!("Error when compiling {}", app.name);
             std::process::exit(1)
