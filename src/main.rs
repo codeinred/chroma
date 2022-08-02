@@ -56,6 +56,8 @@ fn append_defs(args: &mut Vec<String>, defs: &Vec<(String, String)>) {
 }
 
 fn main() -> Result<(), std::io::Error> {
+    // Load config from toml file (modeled after Cargo config files; see
+    // `/examples/hello-chroma/chroma.toml` for an example)
     let contents = fs::read_to_string("chroma.toml")?;
 
     let config: Config = toml::from_str(&contents)?;
@@ -65,14 +67,17 @@ fn main() -> Result<(), std::io::Error> {
 
     println!("{:#?}", config);
 
+    // Create directory to store build target(s)
     std::fs::create_dir_all("build").expect("Couldn't create build/ directory");
     for app in &config.bin {
         let mut args = vec![];
         append_defs(&mut args, &definitions);
         args.push("-o".into());
         args.push("build/".to_string() + app.name.as_str());
+        // Include relevant standard library for language standard designated in config.toml
         args.push(format!("-std={}", config.package.edition));
         args.push(app.path.clone());
+        // Execute the actual compilation command and catch any errors generated
         if !Command::new("g++").args(args).spawn()?.wait()?.success() {
             eprintln!("Error when compiling {}", app.name);
             std::process::exit(1)
